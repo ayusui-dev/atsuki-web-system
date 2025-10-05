@@ -3,40 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>カルテ入力テスト</title>
+  <title>蒼月患者様情報入力フォーム</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="site/css/commonStyle.css">
   <meta name="theme-color" content="#0078D7">
+  <script src="site/js/index.js"></script>
 </head>
 <body>
-  <h1>カルテ入力テストページ</h1>
-  <form id="karte-form">
-    <label for="name">患者名：</label>
-    <input type="text" id="name" name="name"><br><br>
 
-    <label for="age">年齢：</label>
-    <input type="number" id="age" name="age"><br><br>
+  <div class="menu-container" onclick="toggleMenu()">📋 メニューを開く</div>
+  <div class="menu-items" id="menu">
+    <a href="site/createKarte.html">カルテ新規作成</a>
+    <a href="#">カルテ一覧</a>
+    <a href="#">設定</a>
+  </div>
 
-    <label for="diagnosis">診断：</label>
-    <input type="text" id="diagnosis" name="diagnosis"><br><br>
 
-    <label for="notes">メモ：</label><br>
-    <textarea id="notes" name="notes" rows="4" cols="40"></textarea><br><br>
 
-    <button type="submit">保存</button>
-  </form>
-
-  <script>
-    document.getElementById("karte-form").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const karte = {
-        name: document.getElementById("name").value,
-        age: document.getElementById("age").value,
-        diagnosis: document.getElementById("diagnosis").value,
-        notes: document.getElementById("notes").value
-      };
-      console.log("保存予定のカルテ:", karte);
-      alert("カルテを保存しました（仮）");
-    });
-  </script>
 </body>
 </html>

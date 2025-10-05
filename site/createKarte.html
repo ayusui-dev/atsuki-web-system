@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>カルテ入力テスト</title>
+  <meta name="theme-color" content="#0078D7">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>カルテ入力テスト</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="css/commonStyle.css">
+  <link rel="stylesheet" href="css/newKarte.css">
+  <script src="https://cdn.jsdelivr.net/npm/fetch-jsonp@1.1.3/build/fetch-jsonp.min.js"></script>
+  <script src="js/newKarte.js"></script>
+</head>
+<body>
+  <h1>カルテ入力トップページ</h1>
+  <form id="karte-form">
+    <table>
+      <tr>
+        <td>
+          <label for="loginIdFace">写真撮影（任意）：</label>
+        </td>
+        <td>
+          <input type="file" id="loginIdFace" accept="image/*" capture="environment"></input>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="userName">患者名（必須）：</label><br>
+        </td>
+        <td>
+          <input type="text" class="requiredItem" id="userName" required></input>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="zipcode">郵便番号（任意）：</label><br>
+        </td>
+        <td>
+          <input type="number" id="zipcode"></input><br>
+        </td>
+      </tr>      
+      <tr>
+        <td>
+          <label for="zipcode">住所（任意）：</label><br>
+        </td>
+        <td>
+          <input type="text" id="address"></input><br>
+        </td>
+      </tr>   
+    </table>
+  </form>
+
+</body>
+</html>
