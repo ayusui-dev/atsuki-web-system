@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>カルテ入力テスト</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0078D7">
+</head>
+<body>
+  <h1>カルテ入力テストページ</h1>
+  <form id="karte-form">
+    <label for="name">患者名：</label>
+    <input type="text" id="name" name="name"><br><br>
+
+    <label for="age">年齢：</label>
+    <input type="number" id="age" name="age"><br><br>
+
+    <label for="diagnosis">診断：</label>
+    <input type="text" id="diagnosis" name="diagnosis"><br><br>
+
+    <label for="notes">メモ：</label><br>
+    <textarea id="notes" name="notes" rows="4" cols="40"></textarea><br><br>
+
+    <button type="submit">保存</button>
+  </form>
+
+  <script>
+    document.getElementById("karte-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const karte = {
+        name: document.getElementById("name").value,
+        age: document.getElementById("age").value,
+        diagnosis: document.getElementById("diagnosis").value,
+        notes: document.getElementById("notes").value
+      };
+      console.log("保存予定のカルテ:", karte);
+      alert("カルテを保存しました（仮）");
+    });
+  </script>
+</body>
+</html>
