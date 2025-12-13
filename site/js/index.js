@@ -81,6 +81,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BorderPosition = exports.BORDER_TYPE = exports.DISPLAY_TYPE = exports.SIZE_UNIT = exports.Component = void 0;
 const javalang_1 = __webpack_require__(4);
 class Component {
+    /**
+     * 各画面でCSSをスクリプト指定する際に使用する名前
+     * @param typeName
+     */
+    setStyleTypeName(typeName) {
+        this.styleTypeName = typeName;
+    }
+    getStyleTypeName() {
+        return this.styleTypeName;
+    }
     applyBaseCss(s) {
         this.element.style = s.cssText;
     }
@@ -17879,7 +17889,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PostNoText = exports.IOSCheckboxField = exports.CheckboxField = exports.CameraShotField = exports.FileChooserField = exports.DateTimeField = exports.LabelPairInputField = exports.TextField = exports.NumberField = exports.DateField = void 0;
+exports.PostNoText = exports.IOSCheckboxField = exports.CheckboxField = exports.CameraShotField = exports.FileChooserField = exports.DateTimeField = exports.LabelPairInputField = exports.TextAreaField = exports.TextField = exports.NumberField = exports.DateField = void 0;
 const jposta_1 = __webpack_require__(8);
 const AbstractInputBox_1 = __webpack_require__(2);
 const Panel_1 = __webpack_require__(9);
@@ -17904,6 +17914,18 @@ class TextField extends AbstractInputBox_1.AbstractInputBox {
     }
 }
 exports.TextField = TextField;
+class TextAreaField extends Component_1.Component {
+    constructor() {
+        super("textarea");
+    }
+    getText() {
+        return this.getDomObject().value;
+    }
+    setText(text) {
+        this.getDomObject().value = text;
+    }
+}
+exports.TextAreaField = TextAreaField;
 class LabelPairInputField extends Component_1.Component {
     constructor(labelText, inputComponent, LAYOUT_TYPE) {
         super("div");
@@ -17974,11 +17996,33 @@ class FileChooserField extends AbstractInputBox_1.AbstractInputBox {
     }
 }
 exports.FileChooserField = FileChooserField;
-class CameraShotField extends FileChooserField {
+class CameraShotField extends Panel_1.FlowLayoutPanel {
     constructor() {
         super();
-        this.getDomObject().setAttribute("accept", "image/*");
-        this.getDomObject().setAttribute("capture", "environment");
+        this.fileChooser = new FileChooserField();
+        this.clickLabel = new ReadOnlyCompoents_1.Label();
+        this.chooserImage = new ReadOnlyCompoents_1.ImageArea();
+        this.fileChooser.getDomObject().setAttribute("accept", "image/*");
+        this.fileChooser.getDomObject().setAttribute("capture", "environment");
+        this.clickLabel.setForInputComponent(this.fileChooser);
+        this.chooserImage.setPicturePath("https://ayusui-dev.github.io/atsuki-web-system/pic/camera.png");
+        this.clickLabel.getDomObject().appendChild(this.chooserImage.getDomObject());
+        this.addComponents(this.fileChooser, this.clickLabel);
+        this.fileChooser.getDomObject().style.display = "none";
+    }
+    /**
+     * カメラアイコンのサイズを指定する
+     * @param size
+     */
+    setIconSize(size) {
+        this.chooserImage.setWidth(size.getWidth(), size.getWidthUnit());
+        this.chooserImage.setHeight(size.getHeight(), size.getHeightUnit());
+    }
+    getFiles() {
+        return this.fileChooser.getFiles();
+    }
+    getFirstFile() {
+        return this.fileChooser.getFirstFile();
     }
 }
 exports.CameraShotField = CameraShotField;
@@ -18893,10 +18937,8 @@ exports.AbstractScreen = AbstractScreen;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AbstractContetntsAdapter = void 0;
-const AbstractInputBox_1 = __webpack_require__(2);
 const Component_1 = __webpack_require__(3);
-const InputComponents_1 = __webpack_require__(7);
-const Panel_1 = __webpack_require__(9);
+const StyleScripts_1 = __webpack_require__(18);
 /**
  * 蒼月のページコンテンツエリアを描画するための抽象クラス
  */
@@ -18916,27 +18958,53 @@ class AbstractContetntsAdapter {
         return this.contentsArea;
     }
     addContents(...c) {
-        this.applyCommonStyle(...c);
+        StyleScripts_1.StyleUtil.applyStyle(...c);
         this.contentsArea.addComponents(...c);
     }
-    applyCommonStyle(...c) {
-        this.applyStyle(...c);
-    }
-    applyStyle(...c) {
+}
+exports.AbstractContetntsAdapter = AbstractContetntsAdapter;
+
+
+/***/ }),
+/* 18 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.StyleUtil = exports.StyleType = void 0;
+const AbstractInputBox_1 = __webpack_require__(2);
+const InputComponents_1 = __webpack_require__(7);
+const Panel_1 = __webpack_require__(9);
+const ReadOnlyCompoents_1 = __webpack_require__(10);
+var StyleType;
+(function (StyleType) {
+    StyleType["TITLE"] = "title";
+    StyleType["HYPER_LINK"] = "hyperLink";
+})(StyleType || (exports.StyleType = StyleType = {}));
+class StyleUtil {
+    static applyStyle(...c) {
         c.forEach(comp => {
             if (comp instanceof InputComponents_1.LabelPairInputField) {
                 let nc = comp;
                 this.applyInputBoxStyle(nc.getInputComponent());
             }
             if (comp instanceof AbstractInputBox_1.AbstractInputBox) {
-                this.applyInputBoxStyle(comp);
+                if (comp instanceof ReadOnlyCompoents_1.Button) {
+                    StyleUtil.applyButtonStyle(comp);
+                }
+                else if (comp instanceof InputComponents_1.FileChooserField) {
+                }
+                else {
+                    StyleUtil.applyInputBoxStyle(comp);
+                }
             }
             if (comp instanceof Panel_1.Panel) {
-                comp.getChildComponents().forEach(childComp => { this.applyStyle(childComp); });
+                comp.getChildComponents().forEach(childComp => { StyleUtil.applyStyle(childComp); });
             }
         });
     }
-    applyInputBoxStyle(c) {
+    static applyInputBoxStyle(c) {
         if (!(c instanceof InputComponents_1.FileChooserField)) {
             // ファイル選択以外の場合は適用する
             let elem = c.getDomObject();
@@ -18948,12 +19016,24 @@ class AbstractContetntsAdapter {
             elem.style.transition = "all 0.2s ease-in-out";
         }
     }
+    static applyButtonStyle(c) {
+        let elem = c.getDomObject();
+        elem.style.background = "#73d5ff";
+        elem.style.color = "#fff";
+        elem.style.fontWeight = "bold";
+        elem.style.fontSize = "16px";
+        elem.style.padding = "12px 20px";
+        elem.style.border = "none";
+        elem.style.borderRadius = "12px";
+        elem.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+        elem.style.transition = "all 0.3s ease";
+    }
 }
-exports.AbstractContetntsAdapter = AbstractContetntsAdapter;
+exports.StyleUtil = StyleUtil;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -19027,7 +19107,7 @@ exports.AtsukiBaseScreen = AtsukiBaseScreen;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -19038,11 +19118,11 @@ const Panel_1 = __webpack_require__(9);
 const AbstractContetntsAdapter_1 = __webpack_require__(17);
 const InputComponents_1 = __webpack_require__(7);
 const DbManagerProcessWrapper_1 = __webpack_require__(12);
-const KarteStdModel_1 = __webpack_require__(20);
+const KarteStdModel_1 = __webpack_require__(21);
 const Component_1 = __webpack_require__(3);
 const ReadOnlyCompoents_1 = __webpack_require__(10);
 const javalang_1 = __webpack_require__(4);
-const AtsukiDbManager_1 = __webpack_require__(21);
+const AtsukiDbManager_1 = __webpack_require__(22);
 class newKartePage extends AbstractContetntsAdapter_1.AbstractContetntsAdapter {
     constructor() {
         super(...arguments);
@@ -19055,8 +19135,14 @@ class newKartePage extends AbstractContetntsAdapter_1.AbstractContetntsAdapter {
         this.userTeam = new InputComponents_1.LabelPairInputField("所属など", new InputComponents_1.TextField(), Panel_1.LayoutType.BOX_LAYOUR);
         this.userContact = new InputComponents_1.LabelPairInputField("連絡先", new InputComponents_1.NumberField(), Panel_1.LayoutType.BOX_LAYOUR);
         this.userPostNo = new InputComponents_1.PostNoText(this.userAddressText);
+        this.remarkText = new InputComponents_1.TextAreaField();
+        this.lblUserPostNo = new ReadOnlyCompoents_1.Label();
+        this.lblUserPhoto = new ReadOnlyCompoents_1.Label();
         this.lblUserAddress = new ReadOnlyCompoents_1.Label();
-        this.lblUserPhoto = new InputComponents_1.LabelPairInputField("写真撮影", this.userPhoto, Panel_1.LayoutType.BOX_LAYOUR);
+        this.lblRemark = new ReadOnlyCompoents_1.Label();
+        this.lblRemark.setText("備考");
+        this.lblUserPhoto.setText("写真撮影");
+        this.userPhoto = new InputComponents_1.CameraShotField();
         this.lblAllowUserPhotoOnSNS = new ReadOnlyCompoents_1.Label();
         this.lblAllowUserPhotoOnPromotion = new ReadOnlyCompoents_1.Label();
         this.allowUserPhotoOnSNSCheck = new InputComponents_1.IOSCheckboxField();
@@ -19069,22 +19155,25 @@ class newKartePage extends AbstractContetntsAdapter_1.AbstractContetntsAdapter {
         this.lblAllowUserPhotoOnPromotion.setText("写真のプロモーション資料への使用を許可");
         this.lblAllowUserPhotoOnSNS.setForInputComponent(this.allowUserPhotoOnSNSCheck.getCheckBoxObject());
         this.lblAllowUserPhotoOnPromotion.setForInputComponent(this.allowUserPhotoOnPromotionCheck.getCheckBoxObject());
-        this.lblUserAddress.setText("〒郵便番号・住所");
-        this.addContents(this.userName, this.lblUserAddress, this.createLine(this.userPostNo, this.userAddressText), this.userTeam, this.lblUserPhoto, this.createLine(this.lblAllowUserPhotoOnSNS, this.allowUserPhotoOnSNSCheck), this.createLine(this.lblAllowUserPhotoOnPromotion, this.allowUserPhotoOnPromotionCheck), this.addKarteButton);
+        this.lblUserPostNo.setText("〒郵便番号");
+        this.lblUserAddress.setText("住所");
+        let spacer = new Panel_1.Panel();
+        this.addContents(this.userName, this.createItem(this.lblUserPostNo, this.userPostNo), this.createItem(this.lblUserAddress, this.userAddressText), this.userTeam, this.createItem(this.lblUserPhoto, this.userPhoto), this.createItem(this.lblAllowUserPhotoOnSNS, this.allowUserPhotoOnSNSCheck), this.createItem(this.lblAllowUserPhotoOnPromotion, this.allowUserPhotoOnPromotionCheck), this.createItem(this.lblRemark, this.remarkText), this.addKarteButton, spacer);
         this.userPostNo.setWidth(70, Component_1.SIZE_UNIT.PIXEL);
-        this.userAddressText.getDomObject().style.width = "calc(100% - 140px)";
+        this.userPhoto.setIconSize(new javalang_1.Dimension(30, Component_1.SIZE_UNIT.PIXEL, 30, Component_1.SIZE_UNIT.PIXEL));
+        this.remarkText.setHeight(100, Component_1.SIZE_UNIT.PIXEL);
+        spacer.setHeight(200, Component_1.SIZE_UNIT.PIXEL);
         // イベント追加
         this.addKarteButton.addClickEventListener(e => this.karteCreate());
     }
-    createLine(...components) {
-        let panel = new Panel_1.FlowLayoutPanel();
-        panel.setComponentMargin(0, 5, 0, 10);
+    createItem(...components) {
+        let panel = new Panel_1.BoxLayoutPanel();
         panel.addComponents(...components);
         return panel;
     }
     createPanel() {
         let panel = new Panel_1.BoxLayoutPanel();
-        panel.setComponentPadding(10, 10, 0, 0);
+        panel.setComponentPadding(15, 5, 0, 0);
         return panel;
     }
     /**
@@ -19119,7 +19208,7 @@ exports.karteDbProcesses = karteDbProcesses;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -19140,7 +19229,7 @@ exports.KarteStdModel = KarteStdModel;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -19148,8 +19237,8 @@ exports.KarteStdModel = KarteStdModel;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AtsukiDbManager = void 0;
 const DbManager_1 = __webpack_require__(11);
-const KarteStdModel_1 = __webpack_require__(20);
-const KarteDailyModel_1 = __webpack_require__(22);
+const KarteStdModel_1 = __webpack_require__(21);
+const KarteDailyModel_1 = __webpack_require__(23);
 class AtsukiDbManager extends DbManager_1.DbManager {
     getDbName() {
         return "KarteDb";
@@ -19168,7 +19257,7 @@ exports.AtsukiDbManager = AtsukiDbManager;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -19189,7 +19278,7 @@ exports.KarteDailyModel = KarteDailyModel;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -19197,8 +19286,8 @@ exports.KarteDailyModel = KarteDailyModel;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Index = void 0;
 const javalang_1 = __webpack_require__(4);
-const AtsukiBaseScreen_1 = __webpack_require__(18);
-const newKartePage_1 = __webpack_require__(19);
+const AtsukiBaseScreen_1 = __webpack_require__(19);
+const newKartePage_1 = __webpack_require__(20);
 class Index extends AtsukiBaseScreen_1.AtsukiBaseScreen {
     constructor() {
         super(javalang_1.AbstractEntry.makeEntry("カルテ作成", new newKartePage_1.newKartePage()));
@@ -19269,9 +19358,12 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __webpack_require__(1);
 __webpack_require__(17);
-__webpack_require__(18);
 __webpack_require__(19);
-const Index_1 = __webpack_require__(23);
+__webpack_require__(20);
+__webpack_require__(18);
+__webpack_require__(23);
+__webpack_require__(21);
+const Index_1 = __webpack_require__(24);
 new Index_1.Index();
 
 })();
