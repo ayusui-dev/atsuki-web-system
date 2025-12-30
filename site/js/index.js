@@ -78,7 +78,7 @@ var InputType;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BorderPosition = exports.BORDER_TYPE = exports.DISPLAY_TYPE = exports.SIZE_UNIT = exports.Component = void 0;
+exports.BorderPosition = exports.BORDER_TYPE = exports.DISPLAY_TYPE = exports.POSITION_STAT = exports.SIZE_UNIT = exports.Component = void 0;
 const javalang_1 = __webpack_require__(4);
 class Component {
     /**
@@ -108,7 +108,9 @@ class Component {
             this.elementLoadCompleteEvent();
             if (Component.initLoadCompletedFix <= Component.loadCompletedCount && Component.isLoadCompleteCountFix) {
                 // ロードコンプリート数が上回った場合に呼び出す
-                Component.allLoadCompletedProcess();
+                if (Component.allLoadCompletedProcess) {
+                    Component.allLoadCompletedProcess();
+                }
                 Component.loadCompletedCount = BigInt(-1000000);
             }
         };
@@ -185,6 +187,19 @@ class Component {
         this.element.style.height = value.toString() + unit;
     }
     /**
+     * 計算式を用いて幅と高さを調整する。（calc(【ここの文字列を指定する】)
+     * @param widthText 幅のcalc内テキスト
+     * @param height 高さのcalc内テキスト
+     */
+    setSizeCalc(widthText, heightText) {
+        if (widthText) {
+            this.element.style.width = "calc(" + widthText + ")";
+        }
+        if (heightText) {
+            this.element.style.height = "calc(" + heightText + ")";
+        }
+    }
+    /**
      * 要素をその場で残したまま、表示／非表示を切り替る。
      *
      * @param isVisible
@@ -212,14 +227,36 @@ class Component {
      * @returns
      */
     getAbsoluteWidth() {
-        return this.element.getBoundingClientRect().width;
+        return this.element.offsetWidth;
     }
     /**
      * スタイルが適用された後の実際の高さを返却する
      * @returns
      */
     getAbsoluteHeight() {
-        return this.element.getBoundingClientRect().height;
+        return this.element.offsetHeight;
+    }
+    /**
+     * position設定を行う
+     * @param stat position設定
+     * @param bounds サイズ指定（0以上のもののみ設定。省略時は無視）
+     */
+    setPosition(stat, bounds) {
+        this.element.style.position = stat;
+        if (bounds) {
+            if (bounds.getLeft() > 0) {
+                this.element.style.left = bounds.getLeft() + "px";
+            }
+            if (bounds.getRight() > 0) {
+                this.element.style.right = bounds.getRight() + "px";
+            }
+            if (bounds.getTop() > 0) {
+                this.element.style.top = bounds.getTop() + "px";
+            }
+            if (bounds.getBottom() > 0) {
+                this.element.style.bottom = bounds.getBottom() + "px";
+            }
+        }
     }
     /**
      * CSSテキストのサイズ指定からサイズ数値、単位を分解する
@@ -246,6 +283,23 @@ class Component {
                 this.element.classList.add(name);
             }
         }
+    }
+    /**
+     * RAFを使って{@link getAbsoluteHeight}や{@link getAbsoluteWidth}で正常値の返却が保証されるタイミングで
+     * 実行される処理を追加する
+     * @param callback
+     * @returns キャンセルするときに使用するID
+     */
+    addRenderAfterExecuteMethod(callback) {
+        return requestAnimationFrame(callback);
+    }
+    /**
+     * {@link addRenderAfterExecuteMethod}で登録されたイベントをキャンセルする。
+     * {@link addRenderAfterExecuteMethod}での戻り値となるIDが必要なので注意
+     * @param id {@link addRenderAfterExecuteMethod}で戻されたID
+     */
+    cancelRenderAfterExecuteMethod(id) {
+        cancelAnimationFrame(id);
     }
     /**
      * 要素に対して線を描画する
@@ -443,6 +497,29 @@ var SIZE_UNIT;
      */
     SIZE_UNIT["PERCENT"] = "%";
 })(SIZE_UNIT || (exports.SIZE_UNIT = SIZE_UNIT = {}));
+var POSITION_STAT;
+(function (POSITION_STAT) {
+    /**
+     * position="static"
+     */
+    POSITION_STAT["STATIC"] = "static";
+    /**
+     * position="fixed"
+     */
+    POSITION_STAT["FIXED"] = "fixed";
+    /**
+     * position="absolute"
+     */
+    POSITION_STAT["ABSOLUTE"] = "absolute";
+    /**
+     * position="relative"
+     */
+    POSITION_STAT["RELATIVE"] = "relative";
+    /**
+     * position="sticky"
+     */
+    POSITION_STAT["STICKY"] = "sticky";
+})(POSITION_STAT || (exports.POSITION_STAT = POSITION_STAT = {}));
 var DISPLAY_TYPE;
 (function (DISPLAY_TYPE) {
     /**
@@ -502,7 +579,7 @@ var BorderPosition;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Objects = exports.Directions = exports.Dimension = exports.AbstractEntry = void 0;
+exports.DateUtil = exports.Objects = exports.Directions = exports.Dimension = exports.AbstractEntry = void 0;
 const lodash_1 = __webpack_require__(5);
 class AbstractEntry {
     static makeEntry(key, value) {
@@ -618,6 +695,15 @@ class Objects {
     }
 }
 exports.Objects = Objects;
+class DateUtil {
+    static convertJPLocaleStrYMD(d) {
+        let str = d.getFullYear().toString() + "年";
+        str += (d.getMonth() + 1).toString() + "月";
+        str += (d.getDay() + 1).toString() + "日";
+        return str;
+    }
+}
+exports.DateUtil = DateUtil;
 
 
 /***/ }),
@@ -17889,7 +17975,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PostNoText = exports.IOSCheckboxField = exports.CheckboxField = exports.CameraShotField = exports.FileChooserField = exports.DateTimeField = exports.LabelPairInputField = exports.TextAreaField = exports.TextField = exports.NumberField = exports.DateField = void 0;
+exports.PostNoText = exports.IOSCheckboxField = exports.CheckboxField = exports.CameraShotField = exports.FileChooserField = exports.DateTimeField = exports.DropDownList = exports.LabelPairInputField = exports.TextAreaField = exports.SearchTextField = exports.TextField = exports.NumberField = exports.DateField = void 0;
 const jposta_1 = __webpack_require__(8);
 const AbstractInputBox_1 = __webpack_require__(2);
 const Panel_1 = __webpack_require__(9);
@@ -17914,6 +18000,35 @@ class TextField extends AbstractInputBox_1.AbstractInputBox {
     }
 }
 exports.TextField = TextField;
+class SearchTextField extends Panel_1.FlowLayoutPanel {
+    constructor() {
+        super();
+        this.textbox = new TextField();
+        this.imgBtn = new ReadOnlyCompoents_1.ImageArea();
+        this.imgBtn.setPicturePath("https://ayusui-dev.github.io/atsuki-web-system/pic/searchButton.png");
+        this.addComponents(this.textbox, this.imgBtn);
+        this.imgBtn.setVisible(false);
+        this.addRenderAfterExecuteMethod(() => {
+            let absHeight = this.textbox.getAbsoluteHeight();
+            this.imgBtn.setHeight(absHeight, Component_1.SIZE_UNIT.PIXEL);
+            this.imgBtn.setWidthAdjust();
+            let imgElem = this.imgBtn.getDomObject();
+            imgElem.style.position = "relative";
+            imgElem.style.top = (absHeight / 2).toString() + "px";
+            this.imgBtn.setVisible(true);
+        });
+    }
+    addClickEventListener(eventCallback) {
+        this.imgBtn.addClickEventListener(eventCallback);
+    }
+    getText() {
+        return this.textbox.getText();
+    }
+    setText(text) {
+        this.textbox.setText(text);
+    }
+}
+exports.SearchTextField = SearchTextField;
 class TextAreaField extends Component_1.Component {
     constructor() {
         super("textarea");
@@ -17969,6 +18084,30 @@ class LabelPairInputField extends Component_1.Component {
     }
 }
 exports.LabelPairInputField = LabelPairInputField;
+class DropDownList extends Component_1.Component {
+    constructor() {
+        super("select");
+    }
+    addItem(value, display) {
+        let optElem = document.createElement("option");
+        optElem.value = value;
+        optElem.text = display;
+        this.getDomObject().appendChild(optElem);
+    }
+    getSelectedIndex() {
+        return this.getDomObject().selectedIndex;
+    }
+    setSelectedIndex(index) {
+        this.getDomObject().selectedIndex = index;
+    }
+    setSelectedValue(value) {
+        this.getDomObject().value = value;
+    }
+    getSelectedValue() {
+        return this.getDomObject().value;
+    }
+}
+exports.DropDownList = DropDownList;
 class DateTimeField extends AbstractInputBox_1.AbstractInputBox {
     getInputType() {
         return AbstractInputBox_1.InputType.DateTimeLocal;
@@ -18210,9 +18349,10 @@ exports.getAddress = getAddress;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LayoutType = exports.MenuBarPanel = exports.CenteringLayoutPanel = exports.FlowLayoutPanel = exports.BoxLayoutPanel = exports.Form = exports.LayoutTable = exports.TableCell = exports.TableRow = exports.Table = exports.Panel = void 0;
+exports.LayoutType = exports.ToggleOpenPanel = exports.MenuBarPanel = exports.CenteringLayoutPanel = exports.FlowLayoutPanel = exports.BoxLayoutPanel = exports.Form = exports.LayoutTable = exports.TableCell = exports.TableRow = exports.Table = exports.Panel = void 0;
 const javalang_1 = __webpack_require__(4);
 const Component_1 = __webpack_require__(3);
+const ReadOnlyCompoents_1 = __webpack_require__(10);
 class Panel extends Component_1.Component {
     constructor() {
         super("div");
@@ -18410,13 +18550,13 @@ exports.Form = Form;
 class BoxLayoutPanel extends Panel {
     editLayoutInject(c) {
         c.setDisplayType(Component_1.DISPLAY_TYPE.BLOCK);
-        c.setWidth(90, Component_1.SIZE_UNIT.PERCENT);
+        c.getDomObject().style.width = "100%";
     }
 }
 exports.BoxLayoutPanel = BoxLayoutPanel;
 class FlowLayoutPanel extends Panel {
     editLayoutInject(c) {
-        c.setDisplayType(Component_1.DISPLAY_TYPE.INLINE);
+        c.setDisplayType(Component_1.DISPLAY_TYPE.INLINE_BLOCK);
     }
 }
 exports.FlowLayoutPanel = FlowLayoutPanel;
@@ -18427,7 +18567,7 @@ class CenteringLayoutPanel extends Panel {
         this.getDomObject().style.justifyContent = "center";
         this.getDomObject().style.alignItems = "center";
         this.getDomObject().style.height = "100vh";
-        this.getDomObject().style.width = "100vh";
+        this.getDomObject().style.width = "100vw";
     }
 }
 exports.CenteringLayoutPanel = CenteringLayoutPanel;
@@ -18442,9 +18582,9 @@ class MenuBarPanel extends BoxLayoutPanel {
         super();
         this.menuTitle = new FlowLayoutPanel();
         this.menuContents = new BoxLayoutPanel();
-        this.getDomObject().style.position = "fixed";
-        this.getDomObject().style.top = top.toString() + "px";
-        this.getDomObject().style.left = left.toString() + "px";
+        this.menuContents.setComponentPadding(0, 30, 0, 0);
+        let pos = new javalang_1.Directions(top, undefined, undefined, left);
+        this.setPosition(Component_1.POSITION_STAT.FIXED, pos);
         this.menuTitle.addClickEventListener(p => {
             this.actionToggleMenu(p);
         });
@@ -18529,6 +18669,82 @@ class MenuBarPanel extends BoxLayoutPanel {
     }
 }
 exports.MenuBarPanel = MenuBarPanel;
+class ToggleOpenPanel extends BoxLayoutPanel {
+    constructor(titleText) {
+        super();
+        this.backupDisplay = new Map();
+        this.titlePanel = new Panel();
+        this.toggleText = new ReadOnlyCompoents_1.Label();
+        this.titleText = new ReadOnlyCompoents_1.Label();
+        this.titleText.setText(titleText);
+        // ステートラベルの配置
+        this.titlePanel.addComponents(this.toggleText, this.titleText);
+        // クリックイベントの追加
+        this.titlePanel.addClickEventListener(e => {
+            this.toggleContentsArea();
+        });
+    }
+    setContentPanel(p) {
+        this.contentPanel = p;
+        // styleタグのHeight値を取得する
+        this.openContentsAreaHeight = p.getCssObject().height;
+        // 初期表示
+        this.showContents(false);
+        // 初期表示はアニメーションしないため透明化で初期化
+        this.contentPanel.getCssObject().opacity = "0";
+        // デフォルトアニメーションを設定
+        this.contentPanel.getCssObject().transition = "height 0.4s ease";
+        this.contentPanel.addTransitionEndEventListener(e => {
+            if (e.propertyName === "height") {
+                if (this.isOpened) {
+                    this.contentPanel.getChildComponents().forEach(c => {
+                        let str = this.backupDisplay.get(c.getId());
+                        if (str) {
+                            c.getCssObject().display = str;
+                        }
+                    });
+                }
+                else {
+                    this.contentPanel.getCssObject().opacity = "0";
+                }
+            }
+        });
+        // コンテンツの配置
+        this.addComponents(this.titlePanel, this.contentPanel);
+    }
+    showContents(isShow) {
+        this.isOpened = !isShow;
+        this.toggleContentsArea();
+    }
+    toggleContentsArea() {
+        // フラグを反転させる
+        this.isOpened = !this.isOpened;
+        if (this.isOpened) {
+            // 閉じ⇒開きの場合はオープン時のサイズを復元
+            this.toggleText.setText("▶");
+            this.contentPanel.getCssObject().opacity = "1";
+            this.contentPanel.getCssObject().height = this.openContentsAreaHeight;
+        }
+        else {
+            // 開き⇒閉じの場合は0にする
+            // 非表示化はTransitionEndで実施
+            this.toggleText.setText("▼");
+            this.backupDisplay.clear();
+            this.contentPanel.getChildComponents().forEach(c => {
+                this.backupDisplay.set(c.getId(), c.getCssObject().display);
+                c.setDisplayType(Component_1.DISPLAY_TYPE.NONE);
+            });
+            this.contentPanel.getCssObject().height = "0px";
+        }
+    }
+    getTitlePanel() {
+        return this.titlePanel;
+    }
+    getContentsPanel() {
+        return this.contentPanel;
+    }
+}
+exports.ToggleOpenPanel = ToggleOpenPanel;
 var LayoutType;
 (function (LayoutType) {
     LayoutType[LayoutType["FLOW_LAYPUT"] = 0] = "FLOW_LAYPUT";
@@ -18806,24 +19022,54 @@ class CompareModel {
     compare(targetModel) {
         let retValue = true;
         this.conditions.forEach(item => {
+            let inputVal = item.fromValueGetMethod(this.from);
+            let dbVal = item.toValueGetMethod(targetModel);
             switch (item.compareType) {
                 case CompareType.EQUAL:
-                    retValue = retValue && (0, lodash_1.isEqual)(item.fromValueGetMethod(this.from), item.toValueGetMethod(targetModel));
+                    retValue = retValue && (0, lodash_1.isEqual)(inputVal, dbVal);
                     break;
                 case CompareType.NOT_EQUAL:
-                    retValue = retValue && !(0, lodash_1.isEqual)(item.fromValueGetMethod(this.from), item.toValueGetMethod(targetModel));
+                    retValue = retValue && !(0, lodash_1.isEqual)(inputVal, dbVal);
                     break;
                 case CompareType.GREATER_THAN:
-                    retValue = retValue && item.fromValueGetMethod(this.from) > item.toValueGetMethod(targetModel);
+                    retValue = retValue && inputVal > dbVal;
                     break;
                 case CompareType.GREATER_THAN_OR_EQUAL:
-                    retValue = retValue && item.fromValueGetMethod(this.from) >= item.toValueGetMethod(targetModel);
+                    retValue = retValue && inputVal >= dbVal;
                     break;
                 case CompareType.LESS_THAN:
-                    retValue = retValue && item.fromValueGetMethod(this.from) < item.toValueGetMethod(targetModel);
+                    retValue = retValue && inputVal < dbVal;
                     break;
                 case CompareType.LESS_THAN_OR_EQUAL:
-                    retValue = retValue && item.fromValueGetMethod(this.from) <= item.toValueGetMethod(targetModel);
+                    retValue = retValue && inputVal <= dbVal;
+                    break;
+                case CompareType.LIKE_BEGIN_MATCH:
+                case CompareType.LIKE_LAST_MATCH:
+                    let start;
+                    let end;
+                    if (typeof inputVal === "string" && typeof dbVal === "string") {
+                        if (dbVal.length < inputVal.length) {
+                            // 文字数以下の場合は必ずfalseになる
+                            retValue = false;
+                        }
+                        else {
+                            if (item.compareType === CompareType.LIKE_BEGIN_MATCH) {
+                                start = 0;
+                                end = inputVal.length;
+                            }
+                            else {
+                                start = dbVal.length - inputVal.length;
+                                end = dbVal.length;
+                            }
+                            // 前方・後方一致するか判定
+                            retValue = retValue && dbVal.substring(start, end) === inputVal;
+                        }
+                    }
+                    break;
+                case CompareType.LIKE_PART_MATCH:
+                    if (typeof inputVal === "string" && typeof dbVal === "string") {
+                        retValue = retValue && dbVal.includes(inputVal);
+                    }
                     break;
             }
         });
@@ -18865,6 +19111,18 @@ var CompareType;
      * 検索値 <= DBの値
      */
     CompareType[CompareType["LESS_THAN_OR_EQUAL"] = 5] = "LESS_THAN_OR_EQUAL";
+    /**
+     * 検索値 like "～%" (前方一致)
+     */
+    CompareType[CompareType["LIKE_BEGIN_MATCH"] = 6] = "LIKE_BEGIN_MATCH";
+    /**
+     * 検索値 like %～ (後方一致)
+     */
+    CompareType[CompareType["LIKE_LAST_MATCH"] = 7] = "LIKE_LAST_MATCH";
+    /**
+     * 検索値 like %～（部分一致）
+     */
+    CompareType[CompareType["LIKE_PART_MATCH"] = 8] = "LIKE_PART_MATCH";
 })(CompareType || (exports.CompareType = CompareType = {}));
 
 
@@ -18958,8 +19216,8 @@ class AbstractContetntsAdapter {
         return this.contentsArea;
     }
     addContents(...c) {
-        StyleScripts_1.StyleUtil.applyStyle(...c);
         this.contentsArea.addComponents(...c);
+        StyleScripts_1.StyleUtil.applyStyle(...c);
     }
 }
 exports.AbstractContetntsAdapter = AbstractContetntsAdapter;
@@ -18999,7 +19257,16 @@ class StyleUtil {
                     StyleUtil.applyInputBoxStyle(comp);
                 }
             }
-            if (comp instanceof Panel_1.Panel) {
+            if (comp instanceof InputComponents_1.DropDownList) {
+                StyleUtil.applyDropDownListStyle(comp);
+            }
+            if (comp instanceof Panel_1.ToggleOpenPanel) {
+                StyleUtil.applyToggleOpenPanelTitle(comp.getTitlePanel());
+                StyleUtil.applyToggleOpenPanelContent(comp.getContentsPanel());
+                comp.getTitlePanel().getChildComponents().forEach(childComp => { StyleUtil.applyStyle(childComp); });
+                comp.getContentsPanel().getChildComponents().forEach(childComp => { StyleUtil.applyStyle(childComp); });
+            }
+            else if (comp instanceof Panel_1.Panel) {
                 comp.getChildComponents().forEach(childComp => { StyleUtil.applyStyle(childComp); });
             }
         });
@@ -19014,12 +19281,24 @@ class StyleUtil {
             elem.style.background = "linear-gradient( #fefefe, #e0e0e0)";
             elem.style.boxShadow = "inset 0 1px 2px #fff, 0 2px 5px rgba(0, 0, 0, 0.2)";
             elem.style.transition = "all 0.2s ease-in-out";
+            elem.style.width = "calc(" + elem.style.width + " - " + elem.style.paddingLeft + " - " + elem.style.paddingRight + ")";
         }
+    }
+    static applyDropDownListStyle(c) {
+        // ファイル選択以外の場合は適用する
+        let elem = c.getDomObject();
+        elem.style.border = "2px solid #ccc";
+        elem.style.borderRadius = "8px";
+        elem.style.padding = "8px 12px";
+        elem.style.background = "linear-gradient( #fefefe, #e0e0e0)";
+        elem.style.boxShadow = "inset 0 1px 2px #fff, 0 2px 5px rgba(0, 0, 0, 0.2)";
+        elem.style.transition = "all 0.2s ease-in-out";
+        elem.style.width = "calc(" + elem.style.width + " - " + elem.style.paddingLeft + " - " + elem.style.paddingRight + ")";
     }
     static applyButtonStyle(c) {
         let elem = c.getDomObject();
         elem.style.background = "#73d5ff";
-        elem.style.color = "#fff";
+        elem.style.color = "#000";
         elem.style.fontWeight = "bold";
         elem.style.fontSize = "16px";
         elem.style.padding = "12px 20px";
@@ -19027,6 +19306,40 @@ class StyleUtil {
         elem.style.borderRadius = "12px";
         elem.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
         elem.style.transition = "all 0.3s ease";
+    }
+    static applyMenuStyle(p) {
+        let c = p.getDomObject();
+        c.style.borderRadius = "12px";
+        c.style.border = "2px solid #4A90E2";
+        c.style.backgroundColor = "#E6F0FA";
+        c.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.1)";
+        c.style.padding = "8px";
+        c.style.boxSizing = "border-box";
+        c.style.transition = "width 0.4s ease, height 0.4s ease";
+    }
+    static applyToggleOpenPanelTitle(p) {
+        let c = p.getDomObject();
+        c.style.borderRadius = "6px";
+        c.style.border = "2px solid #5588FF";
+        c.style.backgroundColor = "#6699FF";
+        c.style.padding = "4px";
+        c.style.boxSizing = "border-box";
+    }
+    static applyToggleOpenPanelContent(p) {
+        let c = p.getDomObject();
+        c.style.borderRadius = "6px";
+        c.style.border = "2px solid #5588FF";
+        c.style.backgroundColor = "#CCEEFF";
+        c.style.padding = "4px";
+        c.style.boxSizing = "border-box";
+        c.style.transition = "height 0.4s ease";
+    }
+    static applyHyperLinkStyle(linkObj) {
+        let elem = linkObj.getDomObject();
+        elem.style.padding = "10px";
+        elem.style.fontSize = "24px";
+        elem.style.textDecoration = "underline";
+        elem.style.color = "#3377FF";
     }
 }
 exports.StyleUtil = StyleUtil;
@@ -19045,6 +19358,7 @@ const Panel_1 = __webpack_require__(9);
 const ReadOnlyCompoents_1 = __webpack_require__(10);
 const javalang_1 = __webpack_require__(4);
 const AbstractScreen_1 = __webpack_require__(16);
+const StyleScripts_1 = __webpack_require__(18);
 class AtsukiBaseScreen extends AbstractScreen_1.AbstractScreen {
     constructor(...menuEntry) {
         super();
@@ -19067,6 +19381,7 @@ class AtsukiBaseScreen extends AbstractScreen_1.AbstractScreen {
         menu.setCloseShowSizeDim(new javalang_1.Dimension(CLOSE_SIZE, Component_1.SIZE_UNIT.PIXEL, CLOSE_SIZE, Component_1.SIZE_UNIT.PIXEL));
         this.menuMap.forEach((v, k) => {
             let link = new ReadOnlyCompoents_1.HyperLinkText();
+            StyleScripts_1.StyleUtil.applyHyperLinkStyle(link);
             link.setText(k);
             link.addClickEventListener(e => {
                 this.drawBackGround(v);
@@ -19074,32 +19389,20 @@ class AtsukiBaseScreen extends AbstractScreen_1.AbstractScreen {
             });
             menu.addMenuItem(link);
         });
-        let menuContent = menu.getMenuContentPanel().getDomObject();
-        let menuTitle = menu.getMenuTitlePanel().getDomObject();
-        this.applyMenuStyle(menuContent);
-        this.applyMenuStyle(menuTitle);
+        StyleScripts_1.StyleUtil.applyMenuStyle(menu.getMenuContentPanel());
+        StyleScripts_1.StyleUtil.applyMenuStyle(menu.getMenuTitlePanel());
         this.drawPage(this.contentsContainer);
         this.drawPage(menu);
-        this.contentsContainer.getDomObject().style.position = "relative";
-        this.contentsContainer.getDomObject().style.height = "calc(100vh - " + (CLOSE_SIZE + 30).toString() + "px)";
-        this.contentsContainer.getDomObject().style.width = "calc(100vw - " + (CLOSE_SIZE + 30).toString() + "px)";
-        this.contentsContainer.getDomObject().style.top = (CLOSE_SIZE + 15).toString() + "px";
-        this.contentsContainer.getDomObject().style.left = MENU_POS.toString() + "px";
-    }
-    applyMenuStyle(c) {
-        c.style.borderRadius = "12px";
-        c.style.border = "2px solid #4A90E2";
-        c.style.backgroundColor = "#E6F0FA";
-        c.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.1)";
-        c.style.padding = "8px";
-        c.style.boxSizing = "border-box";
-        c.style.transition = "width 0.4s ease, height 0.4s ease";
+        let pos = new javalang_1.Directions(CLOSE_SIZE + 15, undefined, undefined, MENU_POS);
+        this.contentsContainer.setPosition(Component_1.POSITION_STAT.RELATIVE, pos);
+        this.contentsContainer.setSizeCalc("100vw - " + (MENU_POS * 2).toString() + "px", "100vh - " + (CLOSE_SIZE + 30).toString() + "px");
     }
     /**
      * バックグラウンドのパネルに設定したコンテンツを適用する
      * @param p
      */
     drawBackGround(adapter) {
+        this.contentsContainer.getDomObject().innerHTML = "";
         this.contentsContainer.addComponent(adapter.getContents());
     }
 }
@@ -19192,6 +19495,7 @@ class newKartePage extends AbstractContetntsAdapter_1.AbstractContetntsAdapter {
         insModel.allowUserPhotoOnSNS = this.allowUserPhotoOnSNSCheck.isChecked();
         insModel.userTeam = this.userTeam.getInputText();
         insModel.userContact = Number(this.userContact.getInputText());
+        insModel.remarkText = this.remarkText.getText();
         this.dbManager.ExecuteEntry(insModel);
     }
 }
@@ -19263,7 +19567,8 @@ exports.AtsukiDbManager = AtsukiDbManager;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.KarteDailyModel = void 0;
+exports.MemoIdManager = exports.MEMO_ID = exports.KarteDailyModel = void 0;
+const javalang_1 = __webpack_require__(4);
 const AbstractDbModel_1 = __webpack_require__(14);
 class KarteDailyModel extends AbstractDbModel_1.AbstractDbModel {
     getStoreName() {
@@ -19271,10 +19576,54 @@ class KarteDailyModel extends AbstractDbModel_1.AbstractDbModel {
     }
     constructor(init) {
         super();
+        /**
+         * 写真
+         */
+        this.photo = null;
         Object.assign(this, init);
     }
 }
 exports.KarteDailyModel = KarteDailyModel;
+var MEMO_ID;
+(function (MEMO_ID) {
+    MEMO_ID["NAIL"] = "1";
+    MEMO_ID["MAKE"] = "2";
+    MEMO_ID["ESTE"] = "3";
+    MEMO_ID["UNKNOWN"] = "999";
+})(MEMO_ID || (exports.MEMO_ID = MEMO_ID = {}));
+class MemoIdManager {
+    static getMap() {
+        return MemoIdManager.map;
+    }
+    static getMapIterator() {
+        return MemoIdManager.map.entries();
+    }
+    static getDisplayValue(id) {
+        let str = MemoIdManager.map.get(id);
+        if (javalang_1.Objects.notNull(str)) {
+            return str;
+        }
+        else {
+            return "";
+        }
+    }
+    static convertMemoId(id) {
+        let str = MemoIdManager.getDisplayValue(id);
+        if (str != "") {
+            return id;
+        }
+        else {
+            return MEMO_ID.UNKNOWN;
+        }
+    }
+}
+exports.MemoIdManager = MemoIdManager;
+(() => {
+    MemoIdManager.map = new Map();
+    MemoIdManager.map.set(MEMO_ID.NAIL, "ネイル");
+    MemoIdManager.map.set(MEMO_ID.MAKE, "メイク");
+    MemoIdManager.map.set(MEMO_ID.ESTE, "エステ");
+})();
 
 
 /***/ }),
@@ -19288,12 +19637,160 @@ exports.Index = void 0;
 const javalang_1 = __webpack_require__(4);
 const AtsukiBaseScreen_1 = __webpack_require__(19);
 const newKartePage_1 = __webpack_require__(20);
+const dailyKartePage_1 = __webpack_require__(25);
 class Index extends AtsukiBaseScreen_1.AtsukiBaseScreen {
     constructor() {
-        super(javalang_1.AbstractEntry.makeEntry("カルテ作成", new newKartePage_1.newKartePage()));
+        super(javalang_1.AbstractEntry.makeEntry("カルテ作成", new newKartePage_1.newKartePage()), javalang_1.AbstractEntry.makeEntry("施術記録", new dailyKartePage_1.dailyKartePage()));
     }
 }
 exports.Index = Index;
+
+
+/***/ }),
+/* 25 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SearchDetailProcess = exports.DailyEntryItems = exports.SearchParentProcesses = exports.dailyKartePage = void 0;
+const Panel_1 = __webpack_require__(9);
+const AbstractContetntsAdapter_1 = __webpack_require__(17);
+const DbManagerProcessWrapper_1 = __webpack_require__(12);
+const AtsukiDbManager_1 = __webpack_require__(22);
+const KarteStdModel_1 = __webpack_require__(21);
+const InputComponents_1 = __webpack_require__(7);
+const CompareModel_1 = __webpack_require__(15);
+const KarteDailyModel_1 = __webpack_require__(23);
+const Component_1 = __webpack_require__(3);
+const StyleScripts_1 = __webpack_require__(18);
+const javalang_1 = __webpack_require__(4);
+const ReadOnlyCompoents_1 = __webpack_require__(10);
+class dailyKartePage extends AbstractContetntsAdapter_1.AbstractContetntsAdapter {
+    constructor() {
+        super(...arguments);
+        this.dbMan = new AtsukiDbManager_1.AtsukiDbManager(new SearchParentProcesses(this));
+        this.searchResultPanel = new Panel_1.BoxLayoutPanel();
+    }
+    createPanel() {
+        this.drawPanel = new Panel_1.BoxLayoutPanel();
+        this.drawPanel.setComponentPadding(15, 5, 0, 0);
+        return this.drawPanel;
+    }
+    drawContents() {
+        this.addContents(this.searchText, this.searchResultPanel);
+        this.searchResultPanel.setWidth(100, Component_1.SIZE_UNIT.PERCENT);
+        this.searchText.addClickEventListener(e => {
+            this.dbMan.ExecuteSelect(new KarteStdModel_1.KarteStdModel(), this.compModel);
+        });
+    }
+    initializeComponents() {
+        this.dbMan.dbOpen();
+        this.searchText = new InputComponents_1.SearchTextField();
+        this.compModel = new CompareModel_1.CompareModel(this.searchText);
+        // 患者名を部分一致で検索する
+        this.compModel.addCondition(t => t.getText(), model => model.userName, CompareModel_1.CompareType.LIKE_PART_MATCH);
+    }
+    getDrawPanel() {
+        return this.drawPanel;
+    }
+    getSearchResultPanel() {
+        return this.searchResultPanel;
+    }
+}
+exports.dailyKartePage = dailyKartePage;
+class SearchParentProcesses extends DbManagerProcessWrapper_1.DbManagerProcessWrapper {
+    constructor(pageObj) {
+        super();
+        this.pageObj = pageObj;
+        this.inputDataMap = new Map();
+        this.dailyDbMan = new AtsukiDbManager_1.AtsukiDbManager(new SearchDetailProcess());
+        this.dailyDbMan.dbOpen();
+    }
+    dbOpenAfterProcess(dbMan, obj) {
+        dbMan.ExecuteSelect(new KarteStdModel_1.KarteStdModel());
+    }
+    dbSelectAfterProcess(dbMan, result) {
+        let resultPanel = this.pageObj.getSearchResultPanel();
+        resultPanel.removeAll();
+        result.forEach(v => {
+            let toggleItem = new Panel_1.ToggleOpenPanel(v.userName);
+            let itemBox = new Panel_1.BoxLayoutPanel();
+            this.inputDataMap.set(v.id, []);
+            itemBox.setHeight(500, Component_1.SIZE_UNIT.PIXEL);
+            toggleItem.setContentPanel(itemBox);
+            let addButton = new ReadOnlyCompoents_1.Button("施術内容追加");
+            let entryBttuon = new ReadOnlyCompoents_1.Button("登録");
+            let inputAreaPanel = new Panel_1.BoxLayoutPanel();
+            inputAreaPanel.setComponentMargin(0, 5, 0, 0);
+            itemBox.addComponents(addButton, inputAreaPanel, entryBttuon);
+            // 施術追加ボタン
+            addButton.addClickEventListener(e => {
+                var _a;
+                let baseInArea = new Panel_1.FlowLayoutPanel();
+                baseInArea.setComponentPadding(8, 8, 12, 12);
+                let ddl = DailyEntryItems.createMemoIdDropDown();
+                let photoCtl = new InputComponents_1.CameraShotField();
+                photoCtl.setIconSize(new javalang_1.Dimension(30, Component_1.SIZE_UNIT.PIXEL, 30, Component_1.SIZE_UNIT.PIXEL));
+                baseInArea.addComponents(ddl, photoCtl);
+                let memoLabel = new ReadOnlyCompoents_1.Label();
+                memoLabel.setText("施術メモ");
+                let memoStr = new InputComponents_1.TextAreaField();
+                memoStr.setHeight(100, Component_1.SIZE_UNIT.PIXEL);
+                inputAreaPanel.addComponents(baseInArea, memoLabel, memoStr);
+                let entryItem = new DailyEntryItems();
+                entryItem.memoIdCtl = ddl;
+                entryItem.memoStrCtl = memoStr;
+                entryItem.photoCtl = photoCtl;
+                (_a = this.inputDataMap.get(v.id)) === null || _a === void 0 ? void 0 : _a.push(entryItem);
+                // スタイルの適用
+                StyleScripts_1.StyleUtil.applyStyle(ddl);
+            });
+            entryBttuon.addClickEventListener(e => {
+            });
+            // スタイルを適用する
+            StyleScripts_1.StyleUtil.applyStyle(inputAreaPanel);
+            StyleScripts_1.StyleUtil.applyStyle(toggleItem);
+            // 日々の情報を検索する
+            resultPanel.addComponent(toggleItem);
+        });
+    }
+}
+exports.SearchParentProcesses = SearchParentProcesses;
+class DailyEntryItems extends KarteDailyModel_1.KarteDailyModel {
+    applyValues() {
+        this.treatmentDate = new Date();
+        if (javalang_1.Objects.notNull(this.memoIdCtl)) {
+            let memoIdVal = KarteDailyModel_1.MemoIdManager.convertMemoId(this.memoIdCtl.getSelectedValue());
+            if (memoIdVal != KarteDailyModel_1.MEMO_ID.UNKNOWN) {
+                this.memoId = memoIdVal;
+            }
+        }
+        if (javalang_1.Objects.notNull(this.memoStrCtl) && this.memoStrCtl.getText().trim().length > 0) {
+            this.memoStr = this.memoStrCtl.getText().trim();
+        }
+        if (javalang_1.Objects.notNull(this.photoCtl)) {
+            this.photo = this.photoCtl.getFirstFile();
+        }
+    }
+    static createMemoIdDropDown() {
+        let ddl = new InputComponents_1.DropDownList();
+        KarteDailyModel_1.MemoIdManager.getMap().forEach((v, k) => {
+            ddl.addItem(k, v);
+        });
+        return ddl;
+    }
+}
+exports.DailyEntryItems = DailyEntryItems;
+class SearchDetailProcess extends DbManagerProcessWrapper_1.DbManagerProcessWrapper {
+    dbEntryAfterProcess(dbMan) {
+        alert("施術情報を記録しました。 患者名：" + this.userName);
+    }
+    dbEntryErrorProcess(dbMan, ex) {
+        alert("施術情報記録中にエラーが発生しました。" + (ex === null || ex === void 0 ? void 0 : ex.message));
+    }
+}
+exports.SearchDetailProcess = SearchDetailProcess;
 
 
 /***/ })
